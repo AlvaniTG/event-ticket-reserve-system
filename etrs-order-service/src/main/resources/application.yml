@@ -1,0 +1,30 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: order-service
+  sql:
+    init:
+      mode: always
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5437/tickets_db
+    username: myuser
+    password: mypassword
+
+  cloud:
+    stream:
+      bindings:
+        paymentEvents-out-0:
+          destination: payment.completed
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:5000

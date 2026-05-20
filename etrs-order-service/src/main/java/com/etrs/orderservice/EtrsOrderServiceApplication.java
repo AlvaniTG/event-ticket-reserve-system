@@ -1,13 +1,13 @@
-package com.etrs;
+package com.etrs.orderservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class EtrsCoreApplication {
+public class EtrsOrderServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(EtrsCoreApplication.class, args);
+		SpringApplication.run(EtrsOrderServiceApplication.class, args);
 	}
 
 }

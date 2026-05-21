@@ -58,14 +58,14 @@ public class OrderService {
         }
 
         return orderRepository.findById(event.orderId())
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("Order with id " + event.orderId() + " not found.")))
                 .flatMap(order -> {
                     if (order.getStatus() == OrderStatus.COMPLETED) {
                         log.info("Order with id {} has been already completed", event.orderId());
                         return Mono.empty();
                     }
-                    if (order.getStatus() == OrderStatus.PENDING) {
-                        log.error("Invalid state of order {}: {}", order.getId(), order.getStatus());
-                        return Mono.empty();
+                    if (order.getStatus() != OrderStatus.PENDING) {
+                        return Mono.error(new IllegalArgumentException("Invalid order status " + order.getId() + ": " + order.getStatus()));
                     }
                     order.setStatus(OrderStatus.COMPLETED);
                     return orderRepository.save(order);

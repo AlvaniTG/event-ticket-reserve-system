@@ -20,12 +20,8 @@ public class PaymentEventListener {
     public Consumer<PaymentEvent> paymentEvents() {
         return event -> {
             log.info("Received PaymentEvent from RabbitMQ: Payment for order {}", event.orderId());
-
-            orderService.processPayment(event).subscribe(
-                    null,
-                    error -> log.error("Error processing Payment for order {}: {}", event.orderId(), error.getMessage()),
-                    () -> log.info("Payment for order {} has been processed", event.orderId())
-            );
+            orderService.processPayment(event).block();
+            log.info("Payment for order {} has been processed", event.orderId());
         };
     }
 }

@@ -18,10 +18,21 @@ spring:
     password: mypassword
 
   cloud:
+    function:
+      definition: paymentEvents
     stream:
       bindings:
-        paymentEvents-out-0:
-          destination: payment.completed
+        paymentEvents-in-0:
+          destination: payment.completed.events
+          group: order-service-group
+          consumer:
+            max-attempts: 5
+      rabbit:
+        bindings:
+          paymentEvents-in-0:
+            consumer:
+              auto-bind-dlq: true
+              requeue-rejected: false
 
   security:
     oauth2:

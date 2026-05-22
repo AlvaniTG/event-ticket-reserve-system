@@ -3,6 +3,7 @@ package com.etrs.core.controller;
 import com.etrs.core.dto.EventDto;
 import com.etrs.core.service.EventService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class EventController {
             summary = "Get all events",
             description = "Retrieves basic information about all events."
     )
+    @SecurityRequirement()
     public List<EventDto.SummaryResponse> getAllEvents() {
         return eventService.getAllEvents();
     }
@@ -36,6 +38,7 @@ public class EventController {
             summary = "Get event by ID",
             description = "Retrieves detailed information about event with given ID."
     )
+    @SecurityRequirement()
     public EventDto.DetailsResponse getEventById(@PathVariable UUID id) {
         return eventService.getEventById(id);
     }

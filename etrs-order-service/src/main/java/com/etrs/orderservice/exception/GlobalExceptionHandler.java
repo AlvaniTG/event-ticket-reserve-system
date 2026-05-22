@@ -18,11 +18,6 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
-    @ExceptionHandler(NullPointerException.class)
-    public ProblemDetail handleNullPointerException(NullPointerException ex) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "No authorization or invalid token");
-    }
-
     @ExceptionHandler(org.springframework.web.bind.support.WebExchangeBindException.class)
     public ProblemDetail handleWebFluxValidation(org.springframework.web.bind.support.WebExchangeBindException ex) {
         String errorMessage = ex.getBindingResult().getFieldErrors().stream()

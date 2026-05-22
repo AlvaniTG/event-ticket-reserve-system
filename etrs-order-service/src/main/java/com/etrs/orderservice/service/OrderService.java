@@ -5,6 +5,7 @@ import com.etrs.orderservice.domain.OrderStatus;
 import com.etrs.orderservice.dto.OrderDto;
 import com.etrs.orderservice.dto.PaymentEvent;
 import com.etrs.orderservice.repository.OrderRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
@@ -25,12 +26,7 @@ public class OrderService {
 
     public Mono<OrderDto.Response> createOrder(OrderDto.CreateRequest request, UUID userId) {
 
-        return eventServiceClient.get()
-                .uri("/api/events/{id}", request.eventId())
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, _ ->
-                        Mono.error(new IllegalArgumentException("No event with given id exists in the catalog.")))
-                .bodyToMono(OrderDto.EventDetailsResponse.class)
+        return fetchEventDetails(userId)
                 .flatMap(eventDetails -> {
                     Order order = new Order();
                     order.setEventId(request.eventId());
@@ -49,6 +45,21 @@ public class OrderService {
                         savedOrder.getEventId(),
                         savedOrder.getStatus()
                 ));
+    }
+
+    @CircuitBreaker(name = "eventServiceBreaker", fallbackMethod = "eventServiceFallback")
+    public Mono<OrderDto.EventDetailsResponse> fetchEventDetails(UUID eventId) {
+        return eventServiceClient.get()
+                .uri("/api/events/{id}", eventId)
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, _ ->
+                        Mono.error(new IllegalArgumentException("No event with given id exists in the catalog.")))
+                .bodyToMono(OrderDto.EventDetailsResponse.class);
+    }
+
+    public Mono<OrderDto.EventDetailsResponse> eventServiceFallback(UUID eventId, Throwable throwable) {
+        log.error("Circuit Breaker activated for event {}. Reason: {}", eventId, throwable.getMessage());
+        return Mono.error(new IllegalStateException("Catalog service cannot be reached. Try again later."));
     }
 
     public Mono<Void> processPayment(PaymentEvent event) {

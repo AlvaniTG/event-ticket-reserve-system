@@ -39,3 +39,12 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:5000
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      eventServiceBreaker:
+        sliding-window-size: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 2

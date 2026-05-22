@@ -16,11 +16,11 @@ import java.util.UUID;
 @Slf4j
 public class EventServiceClient {
 
-    private final WebClient eventServiceClient;
+    private final WebClient eventServiceWebClient;
 
     @CircuitBreaker(name = "eventServiceBreaker", fallbackMethod = "eventServiceFallback")
     public Mono<OrderDto.EventDetailsResponse> fetchEventDetails(UUID eventId) {
-        return eventServiceClient.get()
+        return eventServiceWebClient.get()
                 .uri("/api/events/{id}", eventId)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, _ ->

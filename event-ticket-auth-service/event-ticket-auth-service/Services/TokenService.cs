@@ -21,20 +21,31 @@ namespace EventServiceAPI.Services
 
         public async Task<string> CreateTokenAsync(IdentityUser user)
         {
-            var claims = new[]
+            // 1. Zbieramy tradycyjne claimy .NET (tak jak do tej pory)
+            var identityClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id)
             };
-            var roles = await _userManager.GetRolesAsync(user);
-            claims = claims.Concat(roles.Select(r => new Claim(ClaimTypes.Role, r))).ToArray();
 
+            var roles = await _userManager.GetRolesAsync(user);
+            identityClaims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
+
+            // 2. ELEGANCJA: Automatyczny translator długich nazw .NET na standardy JWT (sub, role)
+            var jwtClaims = identityClaims.Select(c => c.Type switch
+            {
+                ClaimTypes.NameIdentifier => new Claim("sub", c.Value),
+                ClaimTypes.Role => new Claim("role", c.Value),
+                _ => c // cała reszta claimów leci bez zmian
+            }).ToArray();
+
+            // 3. Generujemy token używając już oczyszczonych claimów
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JWT_KEY"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
                 issuer: _config["Jwt:Issuer"],
                 audience: _config["Jwt:Audience"],
-                claims: claims,
+                claims: jwtClaims, // Przekazujemy przemapowane claimy
                 expires: DateTime.UtcNow.AddHours(2),
                 signingCredentials: creds
             );

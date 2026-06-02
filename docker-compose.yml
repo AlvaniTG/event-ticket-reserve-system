@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
     postgres:
         image: postgres:18-alpine
@@ -51,7 +49,7 @@ services:
     auth-service:
         build:
             context: ./event-ticket-auth-service
-            dockerfile: Dockerfile
+            dockerfile: event-ticket-auth-service/Dockerfile
         environment:
             ASPNETCORE_ENVIRONMENT: Development
             JWT_KEY: ${JWT_KEY}

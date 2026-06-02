@@ -20,4 +20,4 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:5000
+          secret-key: "${JWT_KEY}"

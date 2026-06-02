@@ -10,6 +10,8 @@ namespace event_ticket_auth_service
     {
         public static void Main(string[] args)
         {
+            System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); // Clear default claim mappings
+
             var builder = WebApplication.CreateBuilder(args);
             
             // Db context

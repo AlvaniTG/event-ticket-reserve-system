@@ -1,5 +1,6 @@
 package com.etrs.core.controller;
 
+import com.etrs.core.domain.EventStatus;
 import com.etrs.core.dto.EventDto;
 import com.etrs.core.service.EventService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -83,5 +85,33 @@ public class EventController {
     ) {
         UUID creatorId = UUID.fromString(jwt.getSubject());
         return eventService.rescheduleEvent(id, request, creatorId);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(
+            summary = "Delete an event",
+            description = "Allows the creator or an administrator to permanently delete an event."
+    )
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
+    public void deleteEvent(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        UUID creatorId = UUID.fromString(jwt.getSubject());
+        eventService.deleteEvent(id, creatorId);
+    }
+
+    @PatchMapping("/{id}/moderate")
+    @Operation(
+            summary = "Moderate an event",
+            description = "Allows a moderator to approve or reject a requested event."
+    )
+    @PreAuthorize("hasRole('MODERATOR')")
+    public EventDto.DetailsResponse moderateEvent(
+            @PathVariable UUID id,
+            @RequestParam EventStatus status
+    ) {
+        return eventService.moderateEvent(id, status);
     }
 }

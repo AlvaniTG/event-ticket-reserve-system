@@ -59,6 +59,18 @@ namespace event_ticket_auth_service
                     var context = services.GetRequiredService<EventDbContext>();
                     context.Database.Migrate();
                     Console.WriteLine("Database migration successful");
+
+                    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+                    string[] roleNames = { "USER", "ORGANIZER", "MODERATOR", "ADMIN" };
+                    foreach (var roleName in roleNames)
+                    {
+                        bool roleExists = roleManager.RoleExistsAsync(roleName).GetAwaiter().GetResult();
+                        if (!roleExists)
+                        {
+                            roleManager.CreateAsync(new IdentityRole(roleName)).GetAwaiter().GetResult();
+                            Console.WriteLine($"Role '{roleName}' created");
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {

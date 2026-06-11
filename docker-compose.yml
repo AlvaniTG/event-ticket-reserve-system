@@ -69,6 +69,41 @@ services:
         volumes:
             - ./event-ticket-main-services/wiremock/mappings:/home/wiremock/mappings
 
+    core-service:
+        build:
+            context: ./event-ticket-main-services
+            dockerfile: etrs-core/Dockerfile
+        container_name: etrs-core
+        restart: always
+        environment:
+            - spring.datasource.url=jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+            - spring.datasource.username=${POSTGRES_USER}
+            - spring.datasource.password=${POSTGRES_PASSWORD}
+            - JWT_KEY=${JWT_KEY}
+        ports:
+            - "8081:8081"
+        depends_on:
+            - postgres
+
+    order-service:
+        build:
+            context: ./event-ticket-main-services
+            dockerfile: etrs-order-service/Dockerfile
+        container_name: etrs-order-service
+        restart: always
+        environment:
+            - spring.r2dbc.url=r2dbc:postgresql://postgres:5432/${POSTGRES_DB}
+            - spring.r2dbc.username=${POSTGRES_USER}
+            - spring.r2dbc.password=${POSTGRES_PASSWORD}
+            - spring.rabbitmq.host=rabbitmq
+            - JWT_KEY=${JWT_KEY}
+            - EVENT_SERVICE_URL=${EVENT_SERVICE_URL:-http://core-service:8081}
+        ports:
+            - "8082:8082"
+        depends_on:
+            - postgres
+            - rabbitmq
+            - core-service
 volumes:
     postgres_data:
     sql-data:

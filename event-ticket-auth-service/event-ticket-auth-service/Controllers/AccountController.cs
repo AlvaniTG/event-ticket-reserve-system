@@ -1,4 +1,5 @@
-﻿using EventServiceAPI.Services;
+﻿using event_ticket_auth_service.Data;
+using EventServiceAPI.Services;
 using HotelServiceAPI.DTOs_POST;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,44 +13,65 @@ namespace event_ticket_auth_service.Controllers
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly TokenService _tokenService;
+        private readonly EventDbContext _context;
 
         public AccountController(
             SignInManager<IdentityUser> signInManager,
             UserManager<IdentityUser> userManager,
-            TokenService tokenService)
+            TokenService tokenService,
+            EventDbContext context)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _tokenService = tokenService;
+            _context = context;
         }
 
         [HttpPost("register")]
         public async Task<ActionResult> Register([FromBody] RegisterPostDTO model)
         {
-            var user = new IdentityUser
-            {
-                UserName = model.Email,
-                Email = model.Email
-            };
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            var result = await _userManager.CreateAsync(user, model.Password);
-
-            if (!result.Succeeded)
+            try
             {
-                return BadRequest(result.Errors);
+                var user = new IdentityUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+
+                if (!result.Succeeded)
+                {
+                    return BadRequest(result.Errors);
+                }
+
+                if (!string.IsNullOrEmpty(model.Role))
+                {
+                    await _userManager.AddToRoleAsync(user, model.Role);
+                }
+
+                await transaction.CommitAsync();
+
+                var token = await _tokenService.CreateTokenAsync(user);
+
+                Response.Cookies.Append("jwt", token, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = false,        // Set to true in production
+                    SameSite = SameSiteMode.Lax,
+                    Expires = DateTime.UtcNow.AddHours(2)
+                });
+
+                return Ok(new { token }); // Remove token from response body in production
             }
-
-            var token = await _tokenService.CreateTokenAsync(user);
-
-            Response.Cookies.Append("jwt", token, new CookieOptions
+            catch (Exception)
             {
-                HttpOnly = true,
-                Secure = false,        // Set to true in production
-                SameSite = SameSiteMode.Lax,
-                Expires = DateTime.UtcNow.AddHours(2)
-            });
-
-            return Ok(new { token }); // Remove token from response body in production
+                await transaction.RollbackAsync();
+                throw;
+            }
+            
         }
 
         [HttpPost("login")]

@@ -25,6 +25,7 @@ spring:
         paymentEvents-in-0:
           destination: payment.completed.events
           group: order-service-group
+          content-type: application/json
           consumer:
             max-attempts: 5
       rabbit:

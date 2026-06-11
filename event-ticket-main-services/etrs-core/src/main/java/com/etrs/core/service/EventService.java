@@ -1,6 +1,7 @@
 package com.etrs.core.service;
 
 import com.etrs.core.domain.Event;
+import com.etrs.core.domain.EventStatus;
 import com.etrs.core.dto.EventDto;
 import com.etrs.core.repository.EventRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -58,6 +59,26 @@ public class EventService {
         event.changeStatusAfterReschedule();
         eventMapper.updateEntityWithReschedule(event, request);
 
+        return eventMapper.toDetailsResponse(eventRepository.save(event));
+    }
+
+    public void deleteEvent(UUID id, UUID creatorId) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Event with id: " + id + " not found"));
+
+        event.verifyOwnership(creatorId);
+        eventRepository.delete(event);
+    }
+
+    public EventDto.DetailsResponse moderateEvent(UUID id, EventStatus targetStatus) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Event with id: " + id + " not found"));
+
+        if (!event.getStatus().canTransitionTo(targetStatus)) {
+            throw new IllegalStateException("Current status cannot be transitioned to " + targetStatus);
+        }
+
+        event.setStatus(targetStatus);
         return eventMapper.toDetailsResponse(eventRepository.save(event));
     }
 }

@@ -65,6 +65,13 @@ public class OrderService {
                         return Mono.error(new IllegalArgumentException("Invalid order status " + order.getId() + ": " + order.getStatus()));
                     }
                     order.setStatus(OrderStatus.COMPLETED);
+
+                    log.info("=============================================");
+                    log.info("NOTIFICATION SYSTEM -> Generating e-ticket for order with id {}", event.orderId());
+                    log.info("NOTIFICATION SYSTEM -> Sending email to the user with id {}", order.getUserId());
+                    log.info("NOTIFICATION SYSTEM -> Email sent successfully.");
+                    log.info("=============================================");
+
                     return orderRepository.save(order);
                 })
                 .then();

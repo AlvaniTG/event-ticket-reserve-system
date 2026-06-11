@@ -29,7 +29,7 @@ public class LoggingAspect {
         Object result = joinPoint.proceed(args);
 
         if (result instanceof Mono<?> monoResult) {
-            return monoResult.doOnSuccess(o -> {
+            return monoResult.doOnSuccess(_ -> {
                 long elapsedTime = System.currentTimeMillis() - start;
                 log.info("AOP Audit -> Finished method: {} in {} ms", methodName, elapsedTime);
             });

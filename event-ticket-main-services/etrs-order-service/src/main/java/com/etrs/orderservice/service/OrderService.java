@@ -6,12 +6,9 @@ import com.etrs.orderservice.domain.OrderStatus;
 import com.etrs.orderservice.dto.OrderDto;
 import com.etrs.orderservice.dto.PaymentEvent;
 import com.etrs.orderservice.repository.OrderRepository;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
